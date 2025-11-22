@@ -1,0 +1,414 @@
+import React, { useState } from 'react';
+import { Search, TrendingDown, TrendingUp, Bell, Heart, MapPin, BarChart2, Camera, Package, Store, ExternalLink, X, Settings, ShoppingCart, Filter } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import axios from 'axios';
+
+const FairPriceApp = () => {
+  const [activeTab, setActiveTab] = useState('search');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [data,setdata] = useState([]);
+
+  const handlingSearch = async (query)=>{
+    try{
+      const response = await axios.post('/api/search/product',{query});
+      setdata(response.data);
+      console.log(data);
+    }
+    catch(error){
+      console.error('search error:',error);
+    }
+    
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Navigation */}
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
+                <TrendingDown className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                Fair Price
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActiveTab('search')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  activeTab === 'search' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Search className="w-5 h-5 inline mr-2" />
+                Search
+              </button>
+              <button
+                onClick={() => setActiveTab('watchlist')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  activeTab === 'watchlist' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Heart className="w-5 h-5 inline mr-2" />
+                Watchlist
+                <span className="ml-2 px-2 py-0.5 bg-indigo-600 text-white text-xs rounded-full">0</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('admin')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  activeTab === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <Settings className="w-5 h-5 inline mr-2" />
+                Admin
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Search Tab */}
+        {activeTab === 'search' && (
+          <div className="space-y-6">
+            {/* Hero Section */}
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white">
+              <h1 className="text-3xl font-bold mb-2">Find the Best Prices</h1>
+              <p className="text-indigo-100 mb-6">Compare prices across stores and track price history</p>
+              
+              <div className="flex gap-3">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder="Search products by name, barcode, or upload image..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyUp={(e)=>{
+                      if(e.key === 'Enter'){
+                        handlingSearch(searchQuery);
+                      }
+                    }}
+                    className="w-full pl-12 pr-4 py-3 rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                  />
+                </div>
+                <button className="px-6 py-3 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition-colors flex items-center gap-2">
+                  <Camera className="w-5 h-5" />
+                  Scan
+                </button>
+              </div>
+            </div>
+
+            {/* Product Grid - Empty State */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+              {data && data.length >0 ? (
+                data.map((product,idx) => (
+                <div key={idx} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 overflow-hidden group">
+                  <div className="relative">
+                    <div className="w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                      {product.thumbnail?(
+                        <img src={product.thumbnail} alt={product.name} className="w-full h-full object-cover" />
+                      ):(
+                      <Package className="w-16 h-16 text-gray-400" /> 
+                      )}
+                      
+                    </div>
+                    <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:scale-110 transition-transform">
+                      <Heart className="w-5 h-5 text-gray-400" />
+                    </button>
+                    <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold text-white bg-gray-500">
+                      {product.rating}
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <div className="h-4  rounded mb-3 w-3/4">{product.title.split(',')[0]}</div>
+                    <div className="flex items-baseline gap-2 mb-3">
+                      <div className="h-8 text-bold  rounded w-20">{product.new_price}</div>
+                      <div className="h-4 rounded w-16">{product.old_price}</div>
+                    </div>
+                    {/* <div className="flex items-center justify-between text-sm">
+                      <div className="h-4 rounded w-24">kdkdn</div>
+                    </div> */}
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="h-3 bg-gray-200 rounded w-32">BEST:{product.new_price}</div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ):(
+              <div className="col-span-full text-center py-12 text-gray-500">
+                  Search for products to see results
+              </div>
+            )}
+            </div>
+          </div>
+        )}
+
+        {/* Product Details Tab */}
+        {activeTab === 'details' && (
+          <div className="space-y-6">
+            <button
+              onClick={() => setActiveTab('search')}
+              className="text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-2"
+            >
+              ← Back to search
+            </button>
+
+            {/* Product Info */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="grid md:grid-cols-2 gap-6 p-6">
+                <div className="w-full h-96 bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl flex items-center justify-center">
+                  <Package className="w-24 h-24 text-gray-400" />
+                </div>
+                <div>
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <span className="text-sm text-gray-500 uppercase tracking-wide">Category</span>
+                      <h1 className="text-3xl font-bold text-gray-900 mt-1">Product Name</h1>
+                    </div>
+                    <button className="p-3 rounded-full hover:bg-gray-100 transition-colors">
+                      <Heart className="w-6 h-6 text-gray-400" />
+                    </button>
+                  </div>
+
+                  <div className="mb-6">
+                    <div className="flex items-baseline gap-3 mb-2">
+                      <span className="text-4xl font-bold text-indigo-600">$999</span>
+                      <span className="text-lg text-gray-400 line-through">$1099</span>
+                    </div>
+                    <div className="flex gap-4 text-sm">
+                      <span className="text-green-600">Lowest: $899</span>
+                      <span className="text-gray-500">Avg: $1049</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                    <h3 className="font-semibold text-gray-900 mb-3">Specifications</h3>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="h-4 bg-gray-200 rounded"></div>
+                      <div className="h-4 bg-gray-200 rounded"></div>
+                      <div className="h-4 bg-gray-200 rounded"></div>
+                      <div className="h-4 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+
+                  <button className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
+                    <Bell className="w-5 h-5" />
+                    Set Price Alert
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Price History Chart */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Price History</h2>
+                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-700">
+                  Best time: Now
+                </span>
+              </div>
+              <div className="w-full h-64 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
+                <BarChart2 className="w-16 h-16 text-gray-400" />
+              </div>
+            </div>
+
+            {/* Store Comparison */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Available Stores</h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setFilterType('all')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      filterType === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setFilterType('online')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      filterType === 'online' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    Online
+                  </button>
+                  <button
+                    onClick={() => setFilterType('local')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      filterType === 'local' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <MapPin className="w-4 h-4 inline mr-1" />
+                    Nearby
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {['Amazon', 'Flipkart', 'Reliance Digital', 'Croma'].map((store, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-indigo-300 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center text-2xl">
+                        🛒
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{store}</h3>
+                        <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
+                          <span className="text-green-600">In Stock</span>
+                          <span>•</span>
+                          <span>★ 4.5</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-gray-900">$999</div>
+                        <span className="text-xs text-green-600 font-medium">Best Price</span>
+                      </div>
+                      <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                        Visit
+                        <ExternalLink className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Watchlist Tab */}
+        {activeTab === 'watchlist' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold text-gray-900">My Watchlist</h1>
+              <span className="text-gray-500">0 products</span>
+            </div>
+
+            <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
+              <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 mb-2">Your watchlist is empty</p>
+              <button
+                onClick={() => setActiveTab('search')}
+                className="text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                Browse products
+              </button>
+            </div>
+
+            {/* Price Alerts Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Active Price Alerts</h2>
+              <div className="text-center py-10">
+                <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">No active price alerts</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Admin Dashboard Tab */}
+        {activeTab === 'admin' && (
+          <div className="space-y-6">
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Active Stores</h3>
+                  <Store className="w-8 h-8 opacity-80" />
+                </div>
+                <p className="text-4xl font-bold">24</p>
+                <p className="text-blue-100 text-sm mt-2">3 pending integration</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Products Tracked</h3>
+                  <Package className="w-8 h-8 opacity-80" />
+                </div>
+                <p className="text-4xl font-bold">1,247</p>
+                <p className="text-green-100 text-sm mt-2">+89 this week</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Price Updates</h3>
+                  <BarChart2 className="w-8 h-8 opacity-80" />
+                </div>
+                <p className="text-4xl font-bold">98.2%</p>
+                <p className="text-purple-100 text-sm mt-2">Last 24 hours</p>
+              </div>
+            </div>
+
+            {/* Store Connectors */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Store Connectors Status</h2>
+              <div className="space-y-3">
+                {[
+                  { name: 'Amazon India', status: 'active', sync: '2 min ago' },
+                  { name: 'Flipkart', status: 'active', sync: '3 min ago' },
+                  { name: 'Reliance Digital', status: 'active', sync: '5 min ago' },
+                  { name: 'Croma', status: 'active', sync: '4 min ago' },
+                  { name: 'Vijay Sales', status: 'pending', sync: '1 hour ago' }
+                ].map((store, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${store.status === 'active' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                      <span className="font-semibold text-gray-900">{store.name}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-gray-500">
+                        {store.status === 'active' ? 'Active' : 'Pending'} • Last sync: {store.sync}
+                      </span>
+                      <button className="text-indigo-600 hover:text-indigo-700">
+                        <Settings className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Pipeline Monitoring */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Pipeline Monitoring</h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Data Ingestion Queue</span>
+                  <span className="font-semibold">127 items</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="bg-indigo-600 h-3 rounded-full transition-all" style={{width: '67%'}}></div>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-sm text-center">
+                  <div>
+                    <p className="text-gray-500">Processing</p>
+                    <p className="font-bold text-blue-600">45</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Completed</p>
+                    <p className="font-bold text-green-600">1,203</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Failed</p>
+                    <p className="font-bold text-red-600">12</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default FairPriceApp;
