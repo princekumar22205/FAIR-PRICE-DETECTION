@@ -103,15 +103,16 @@ const FairPriceApp = () => {
             </div>
 
             {/* Product Grid - Empty State */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
               {data && data.length >0 ? (
-                data.map((product,idx) => (
-                <div key={idx} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 overflow-hidden group">
-                  <div className="relative">
-                    <div className="w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                data.slice(0, 10).map((product,idx) => (
+                  
+                <div key={idx} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 overflow-hidden group ">
+                  <div className="relative ">
+                    <div className="w-60 h-78 pl-10 flex items-center justify-center">
                       {product.thumbnail?(
-                        <img src={product.thumbnail} alt={product.name} className="w-full h-full object-cover" />
+                        <img src={product.thumbnail} alt={product.name} className=" object-fix" />
                       ):(
                       <Package className="w-16 h-16 text-gray-400" /> 
                       )}
@@ -120,14 +121,14 @@ const FairPriceApp = () => {
                     <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:scale-110 transition-transform">
                       <Heart className="w-5 h-5 text-gray-400" />
                     </button>
-                    <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold text-white bg-gray-500">
+                    <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600">
                       {product.rating}
                     </div>
                   </div>
                   <div className="p-4">
-                    <div className="h-4  rounded mb-3 w-3/4">{product.title.split(',')[0]}</div>
+                    <div className="h-4  rounded mb-3 w-3/4">{product.title}</div>
                     <div className="flex items-baseline gap-2 mb-3">
-                      <div className="h-8 text-bold  rounded w-20">{product.new_price}</div>
+                      <div className="h-8 text-bold  rounded w-20"></div>
                       <div className="h-4 rounded w-16">{product.old_price}</div>
                     </div>
                     {/* <div className="flex items-center justify-between text-sm">
