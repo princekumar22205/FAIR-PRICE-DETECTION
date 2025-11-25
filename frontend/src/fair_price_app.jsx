@@ -10,6 +10,7 @@ const FairPriceApp = () => {
   const [filterType, setFilterType] = useState('all');
   const [data,setdata] = useState([]);
   const [watchlist,setWatchlist] = useState([]);
+  const [productDetail, setProductDetail] = useState({});
 
   const handlingSearch = async (query)=>{
     try{
@@ -38,7 +39,10 @@ const FairPriceApp = () => {
   const isInWatchlist = (productId)=>{
     return watchlist.some(prev=>prev.position === productId)
   }
-  
+
+
+//product card------------------------->
+
   const ProductCard = ({ product }) => (
     <div 
       onClick={() => {
@@ -187,7 +191,7 @@ const FairPriceApp = () => {
               {data && data.length >0 ? (
                 data.map((product,idx) => (
                   
-                <div key={idx} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 overflow-hidden group ">
+                <div key={idx} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 overflow-hidden group " onClick={()=>{setActiveTab('details'); setProductDetail(product)}}>
                   <div className="relative ">
                     <div className="w-60 h-70 pl-10 flex items-center justify-center">
                       {product.thumbnail?(
@@ -197,7 +201,7 @@ const FairPriceApp = () => {
                       )}
                       
                     </div>
-{/* ----watchlist button ----------------*/}
+    {/* ----watchlist button ----------------*/}
                     <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:scale-110 transition-transform cursor-pointer " onClick={(e)=>{
                       e.stopPropagation();
                       toggleWatchlist(product);
@@ -210,7 +214,7 @@ const FairPriceApp = () => {
                     </div>
                   </div>
                   <div className="p-4">
-                    <div className="h-4 text-bold rounded h-full ">{product.title}</div>
+                    <div className="font-semibold text-gray-900 mb-2 line-clamp-2">{product.title}</div>
                     <div className="flex items-baseline gap-2 ">
                       <div className="h-8 text-bold  rounded w-20">
                       </div>
@@ -234,7 +238,8 @@ const FairPriceApp = () => {
           </div>
         )}
 
-        {/* Product Details Tab */}
+{/*----- Product Details Tab ------------------*/}
+
         {activeTab === 'details' && (
           <div className="space-y-6">
             <button
@@ -247,8 +252,8 @@ const FairPriceApp = () => {
             {/* Product Info */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="grid md:grid-cols-2 gap-6 p-6">
-                <div className="w-full h-96 bg-gradient-to-br from-gray-200 to-gray-300 rounded-xl flex items-center justify-center">
-                  <Package className="w-24 h-24 text-gray-400" />
+                <div className="w-full h-96  rounded-xl flex items-center justify-center">
+                  <img src={productDetail.thumbnail} className=" h-90 object-cover hover:scale-105 transition-transform"/>
                 </div>
                 <div>
                   <div className="flex items-start justify-between mb-4">
