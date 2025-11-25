@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Search, TrendingDown, TrendingUp, Bell, Heart, MapPin, BarChart2, Camera, Package, Store, ExternalLink, X, Settings, ShoppingCart, Filter } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import axios from 'axios';
+// import ProductCard from './ProudctCard';
 
 const FairPriceApp = () => {
   const [activeTab, setActiveTab] = useState('search');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [data,setdata] = useState([]);
+  const [watchlist,setWatchlist] = useState([]);
 
   const handlingSearch = async (query)=>{
     try{
@@ -18,8 +20,85 @@ const FairPriceApp = () => {
     catch(error){
       console.error('search error:',error);
     }
-    
   }
+
+  const toggleWatchlist = (product)=>{
+    setWatchlist((prev)=>{
+      
+      const exist = prev.find((p)=> p.position === product.position);
+      if(exist){
+       return prev.filter((p)=> p.position !== product.position);
+      }
+      
+        return [...prev, product];
+      
+    });
+  };
+
+  const isInWatchlist = (productId)=>{
+    return watchlist.some(prev=>prev.position === productId)
+  }
+  
+  const ProductCard = ({ product }) => (
+    <div 
+      onClick={() => {
+        setSelectedProduct(product);
+        setActiveTab('details');
+      }}
+      className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 overflow-hidden group"
+    >
+      <div className="relative">
+        <div className="w-60 h-70 pl-10 flex items-center justify-center">
+        {product.thumbnail ? (
+          <img 
+            src={product.thumbnail} 
+            alt={product.title} 
+            className="object-cover  group-hover:scale-105 transition-transform"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
+          />
+        ) : (
+          <Package className="w-16 h-16 text-gray-400" />
+        )}
+      </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleWatchlist(product);
+          }}
+          className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:scale-110 transition-transform"
+        >
+          <Heart className={`w-5 h-5 ${isInWatchlist(product.position) ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+        </button>
+        <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold text-white ${
+          product.trend === 'down' ? 'bg-green-500' : product.trend === 'up' ? 'bg-red-500' : 'bg-gray-500'
+        }`}>
+          {product.trend === 'down' && <TrendingDown className="w-3 h-3 inline mr-1" />}
+          {product.trend === 'up' && <TrendingUp className="w-3 h-3 inline mr-1" />}
+          {product.trend === 'down' ? 'Price Down' : product.trend === 'up' ? 'Price Up' : 'Stable'}
+        </div>
+      </div>
+      <div className="p-4">
+        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{product.title}</h3>
+        <div className="flex items-baseline gap-2 mb-3">
+          <span className="text-2xl font-bold text-indigo-600">${product.new_price}</span>
+          {/* <span className="text-sm text-gray-500 line-through">${product.avgPrice}</span> */}
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-green-600 font-medium">Best: ${product.lowestPrice}</span>
+          {/* <span className="text-gray-500">{product.stores.length} stores</span> */}
+        </div>
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <span className="text-xs text-gray-600">
+            {/* Best time: <span className="font-semibold text-gray-900">{product.bestTimeToBuy}</span> */}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -54,7 +133,7 @@ const FairPriceApp = () => {
               >
                 <Heart className="w-5 h-5 inline mr-2" />
                 Watchlist
-                <span className="ml-2 px-2 py-0.5 bg-indigo-600 text-white text-xs rounded-full">0</span>
+                <span className="ml-2 px-2 py-0.5 bg-indigo-600 text-white text-xs rounded-full">{watchlist.length}</span>
               </button>
               <button
                 onClick={() => setActiveTab('admin')}
@@ -102,38 +181,44 @@ const FairPriceApp = () => {
               </div>
             </div>
 
-            {/* Product Grid - Empty State */}
+{/*----Product Grid - Empty State -------*/}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
               {data && data.length >0 ? (
-                data.slice(0, 10).map((product,idx) => (
+                data.map((product,idx) => (
                   
                 <div key={idx} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 overflow-hidden group ">
                   <div className="relative ">
-                    <div className="w-60 h-78 pl-10 flex items-center justify-center">
+                    <div className="w-60 h-70 pl-10 flex items-center justify-center">
                       {product.thumbnail?(
-                        <img src={product.thumbnail} alt={product.name} className=" object-fix" />
+                        <img src={product.thumbnail} alt={product.name} className=" object-fix group-hover:scale-105 transition-transform" />
                       ):(
                       <Package className="w-16 h-16 text-gray-400" /> 
                       )}
                       
                     </div>
-                    <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:scale-110 transition-transform">
-                      <Heart className="w-5 h-5 text-gray-400" />
+{/* ----watchlist button ----------------*/}
+                    <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:scale-110 transition-transform cursor-pointer " onClick={(e)=>{
+                      e.stopPropagation();
+                      toggleWatchlist(product);
+                      }}>
+                      <Heart className={`w-6 h-6 ${isInWatchlist(product.position)? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
                     </button>
+
                     <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600">
                       {product.rating}
                     </div>
                   </div>
                   <div className="p-4">
-                    <div className="h-4  rounded mb-3 w-3/4">{product.title}</div>
-                    <div className="flex items-baseline gap-2 mb-3">
-                      <div className="h-8 text-bold  rounded w-20"></div>
-                      <div className="h-4 rounded w-16">{product.old_price}</div>
+                    <div className="h-4 text-bold rounded h-full ">{product.title}</div>
+                    <div className="flex items-baseline gap-2 ">
+                      <div className="h-8 text-bold  rounded w-20">
+                      </div>
+                      {/* <div className="h-4 rounded w-16">{product.old_price}</div> */}
                     </div>
-                    {/* <div className="flex items-center justify-between text-sm">
+                     <div className="flex items-center justify-between text-sm">
                       <div className="h-4 rounded w-24">kdkdn</div>
-                    </div> */}
+                    </div> 
                     <div className="mt-3 pt-3 border-t border-gray-100">
                       <div className="h-3 bg-gray-200 rounded w-32">BEST:{product.new_price}</div>
                     </div>
@@ -284,15 +369,15 @@ const FairPriceApp = () => {
           </div>
         )}
 
-        {/* Watchlist Tab */}
+{/* --Watchlist Tab -----*/}
         {activeTab === 'watchlist' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold text-gray-900">My Watchlist</h1>
-              <span className="text-gray-500">0 products</span>
+              <span className="text-gray-500">{watchlist.length} products</span>
             </div>
 
-            <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
+            {watchlist.length === 0 ? (<div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
               <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 mb-2">Your watchlist is empty</p>
               <button
@@ -302,6 +387,14 @@ const FairPriceApp = () => {
                 Browse products
               </button>
             </div>
+            ):(
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {watchlist.map(product => (
+                  <ProductCard key={product.position} product={product} />
+                ))}
+              </div>
+            )}
+            
 
             {/* Price Alerts Section */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
