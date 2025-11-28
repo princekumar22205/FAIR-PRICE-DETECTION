@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const {search} = require('../controllers/search_controller'); 
+const {amazon,ebay} = require('../controllers/search_controller'); 
 
-router.post('/product',search);
+router.post('/amazon',amazon);
+router.post('/ebay',ebay);
 
 module.exports = router

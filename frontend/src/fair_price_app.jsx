@@ -8,13 +8,18 @@ const FairPriceApp = () => {
   const [activeTab, setActiveTab] = useState('search');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [priceAlerts, setPriceAlerts] = useState([]);
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [targetPrice, setTargetPrice] = useState('');
   const [data,setdata] = useState([]);
   const [watchlist,setWatchlist] = useState([]);
   const [productDetail, setProductDetail] = useState({});
+  // const [detail,Setdetail] = useState([]);
 
   const handlingSearch = async (query)=>{
     try{
-      const response = await axios.post('/api/search/product',{query});
+      const response = await axios.post('/api/search/amazon',{query});
       setdata(response.data);
       console.log(data);
     }
@@ -22,6 +27,32 @@ const FairPriceApp = () => {
       console.error('search error:',error);
     }
   }
+  const createPriceAlert = () => {
+    console.log(selectedProduct, targetPrice);
+    if (selectedProduct && targetPrice) {
+      setPriceAlerts(prev => [...prev, {
+        id: Date.now(),
+        productId: selectedProduct.position,
+        productName: selectedProduct.title,
+        targetPrice: parseFloat(targetPrice),
+        currentPrice: selectedProduct.new_Price,
+      }]);
+      setShowAlertModal(false);
+      setTargetPrice('');
+    }
+  };
+  // const compare_price = async(query)=>{
+  //   try{
+  //     const response = await axios.post('/api/search/ebay',{query});
+  //     console.log(response.data);
+  //     setProductDetail((prev)=>{
+  //       return [...prev,response.data];
+  //     })
+  //   }
+  //   catch(error){
+  //     console.error(error);
+  //   }
+  // }
 
   const toggleWatchlist = (product)=>{
     setWatchlist((prev)=>{
@@ -191,7 +222,7 @@ const FairPriceApp = () => {
               {data && data.length >0 ? (
                 data.map((product,idx) => (
                   
-                <div key={idx} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 overflow-hidden group " onClick={()=>{setActiveTab('details'); setProductDetail(product)}}>
+                <div key={idx} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 overflow-hidden group " onClick={()=>{setActiveTab('details'); setProductDetail(product); }}>
                   <div className="relative ">
                     <div className="w-60 h-70 pl-10 flex items-center justify-center">
                       {product.thumbnail?(
@@ -210,7 +241,7 @@ const FairPriceApp = () => {
                     </button>
 
                     <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600">
-                      {product.rating}
+                    ★  {product.rating}
                     </div>
                   </div>
                   <div className="p-4">
@@ -253,27 +284,30 @@ const FairPriceApp = () => {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="grid md:grid-cols-2 gap-6 p-6">
                 <div className="w-full h-96  rounded-xl flex items-center justify-center">
-                  <img src={productDetail.thumbnail} className=" h-90 object-cover hover:scale-105 transition-transform"/>
+                  <img src={productDetail.thumbnail} className=" h-70 object-cover hover:scale-105 transition-transform"/>
                 </div>
                 <div>
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <span className="text-sm text-gray-500 uppercase tracking-wide">Category</span>
-                      <h1 className="text-3xl font-bold text-gray-900 mt-1">Product Name</h1>
+                      <h1 className="text-3xl font-bold text-gray-900 mt-1">{productDetail.title.split(",")[0]}</h1>
                     </div>
-                    <button className="p-3 rounded-full hover:bg-gray-100 transition-colors">
-                      <Heart className="w-6 h-6 text-gray-400" />
+                    <button className="p-3 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"onClick={(e)=>{
+                      e.stopPropagation();
+                      toggleWatchlist(productDetail);
+                      }}>
+                      <Heart className={`w-6 h-6 ${isInWatchlist(productDetail.position)? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
                     </button>
                   </div>
 
                   <div className="mb-6">
                     <div className="flex items-baseline gap-3 mb-2">
-                      <span className="text-4xl font-bold text-indigo-600">$999</span>
-                      <span className="text-lg text-gray-400 line-through">$1099</span>
+                      <span className="text-4xl font-bold text-indigo-600">{productDetail.new_price}</span>
+                      <span className="text-lg text-gray-400 line-through">{productDetail.old_price}</span>
                     </div>
                     <div className="flex gap-4 text-sm">
-                      <span className="text-green-600">Lowest: $899</span>
-                      <span className="text-gray-500">Avg: $1049</span>
+                      <span className="text-green-600">Lowest:{productDetail.new_price}</span>
+                      {/* <span className="text-gray-500">Avg: $1049</span> */}
                     </div>
                   </div>
 
@@ -287,7 +321,10 @@ const FairPriceApp = () => {
                     </div>
                   </div>
 
-                  <button className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
+                  <button className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2" 
+                  onClick={() => {setShowAlertModal(true); 
+                                  setSelectedProduct(productDetail);
+                  }}>
                     <Bell className="w-5 h-5" />
                     Set Price Alert
                   </button>
@@ -342,29 +379,31 @@ const FairPriceApp = () => {
               </div>
 
               <div className="space-y-3">
-                {['Amazon', 'Flipkart', 'Reliance Digital', 'Croma'].map((store, idx) => (
+                {[productDetail].map((store, idx) => (
                   <div key={idx} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-indigo-300 transition-colors">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center text-2xl">
                         🛒
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">{store}</h3>
+                        <h3 className="font-semibold text-gray-900">amazon</h3>
                         <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
                           <span className="text-green-600">In Stock</span>
                           <span>•</span>
-                          <span>★ 4.5</span>
+                          <span>★ {store.rating}</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-gray-900">$999</div>
+                        <div className="text-2xl font-bold text-gray-900">{store.new_price}</div>
                         <span className="text-xs text-green-600 font-medium">Best Price</span>
                       </div>
-                      <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                      <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2" onClick={()=>{
+                        window.open(`${store.link}`,"blank")
+                      }}>
                         Visit
-                        <ExternalLink className="w-4 h-4" />
+                        {/* <ExternalLink className="w-4 h-4" /> */}
                       </button>
                     </div>
                   </div>
@@ -402,13 +441,38 @@ const FairPriceApp = () => {
             
 
             {/* Price Alerts Section */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Active Price Alerts</h2>
-              <div className="text-center py-10">
-                <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No active price alerts</p>
+            {priceAlerts.length > 0 ?(
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Active Price Alerts</h2>
+                <div className="space-y-3">
+                  {priceAlerts.map(alert => (
+                    <div key={alert.id} className="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{alert.productName}</h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Alert when price drops to <span className="font-bold text-green-600">${alert.targetPrice}</span>
+                          <span className="text-gray-400 ml-2">(Current: ${alert.currentPrice})</span>
+                        </p>
+                      </div>
+                      <button 
+                        onClick={() => setPriceAlerts(prev => prev.filter(a => a.id !== alert.id))}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            ):(
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Active Price Alerts</h2>
+                <div className="text-center py-10">
+                  <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No active price alerts</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -506,6 +570,50 @@ const FairPriceApp = () => {
           </div>
         )}
       </div>
+        {showAlertModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-900">Set Price Alert</h2>
+              <button onClick={() => setShowAlertModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <p className="text-gray-600 mb-4">
+              Get notified when the price of <span className="font-semibold">{selectedProduct.title.split(",")[0]}</span> drops to your target price.
+            </p>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Target Price ($)</label>
+              <input
+                type="number"
+                value={targetPrice}
+                onChange={(e) => setTargetPrice(e.target.value)}
+                placeholder="Enter target price"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              {selectedProduct && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Current price: <span className="font-semibold">{selectedProduct.new_price}</span>
+                </p>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowAlertModal(false)}
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={createPriceAlert}
+                className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
+              >
+                Set Alert
+              </button>
+            </div>
+          </div>
+        </div>
+        )}
     </div>
   );
 };
