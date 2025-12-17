@@ -21,14 +21,17 @@ const amazon = asyncHandler(async(req,res)=>{
     const result = response.data.organic_results?.map((item)=>({
         position : item.position,
         title : item.title,
+        website: "amazon",
+        logo:"https://telecomtalk.info/wp-content/uploads/2021/05/amazon-one-month-prime-membership-discontinued-rbi.png",
         new_price: item.price,
         old_price: item.old_price,
         thumbnail: item.thumbnail,
         rating: item.rating,
+        extracted_price: item.extracted_price,
         link: item.link,
     }));
-    res.send(result);
-    res.status(200).json({result});
+    // res.send(result);
+    res.status(200).json(result);
 }
     catch(error){
         console.error("SerpApi error:", error.response?.data || error.message);
@@ -51,10 +54,12 @@ const ebay = asyncHandler(async(req,res)=>{
         throw new Error("Fail to fetch product data")
     }
     const result = response.data.organic_results?.map((item)=>({
-       
         title : item.title,
-        new_price: item.price.raw,
-        old_price: item.old_price.raw,
+        website: "ebay",
+        logo:"https://static.wixstatic.com/media/868f94_84f8a34aa54749eeab57e07196d97ef1~mv2.jpg",
+        new_price: item.price.raw || item.price.from.raw,
+        // old_price: item.old_price.raw || item.old_price.from.raw || new_price+30,
+        rating: item.rating || "4.2",
         link: item.link
     }));
     // res.send(result);
