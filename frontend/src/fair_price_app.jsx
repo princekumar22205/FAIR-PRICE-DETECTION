@@ -16,18 +16,24 @@ const FairPriceApp = () => {
   const [watchlist,setWatchlist] = useState([]);
   const [productDetail, setProductDetail] = useState({});
   const [productEbay, setProductEbay] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
   // const [detail,Setdetail] = useState([]);
 
   const handlingSearch = async (query)=>{
     try{
+      setIsLoading(true);          
+      setdata([]);                  
       const response = await axios.post('/api/search/amazon',{query});
       const responseEbay = await axios.post('/api/search/ebay',{query});
+      
       setProductEbay(responseEbay.data.result[0]);
       setdata(response.data);
-      console.log(data);
+      setWatchlist([]);
     }
     catch(error){
       console.error('search error:',error);
+    }finally {
+      setIsLoading(false);          // ← Hide spinner
     }
   }
   const createPriceAlert = () => {
@@ -208,18 +214,35 @@ const FairPriceApp = () => {
                     className="w-full pl-12 pr-4 py-3 rounded-xl bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-300"
                   />
                 </div>
-                <button className="px-6 py-3 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition-colors flex items-center gap-2">
+                {/* <button className="px-6 py-3 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition-colors flex items-center gap-2">
                   <Camera className="w-5 h-5" />
                   Scan
-                </button>
+                </button> */}
               </div>
             </div>
 
 {/*----Product Grid - Empty State -------*/}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-              {data && data.length >0 ? (
+            <>
+          {isLoading ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-20">
+              <div className="relative">
+                <div className="w-20 h-20 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 w-20 h-20 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin" 
+                    style={{ animationDirection: 'reverse', animationDuration: '1s' }}>
+                </div>
+              </div>
+              <p className="mt-6 text-lg font-semibold text-gray-700 animate-pulse">Searching products...</p>
+              <p className="mt-2 text-sm text-gray-500">Finding the best prices for you</p>
+            </div>
+          ) : (       
+            <>
+              {data && data.length >0 ?
+              
+              (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">{
                 data.map((product,idx) => (
+
                   
                 <div key={idx} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 overflow-hidden group " onClick={()=>{setActiveTab('details'); setProductDetail(product); }}>
                   <div className="relative ">
@@ -258,14 +281,15 @@ const FairPriceApp = () => {
                     </div>
                   </div>
                 </div>
-              ))
+              ))}
+              </div>
             ):(
+              // <>
               
-              //     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              // {[1, 2, 3, 4, 5, 6,7,8,9,10].map((item) => (
-              //   <div key={item} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 overflow-hidden group w-70 h-90">
+              // {[1,2,3,4,5,6,7,8,9,10].map((item) => (
+              //   <div key={item} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all cursor-pointer border border-gray-100 overflow-hidden group ">
               //     <div className="relative ">
-              //       <div className="w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+              //       <div className="w-60 h-70 pl-10 flex items-center justify-center">
               //         <Package className="w-16 h-16 text-gray-400" />
               //       </div>
               //       <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:scale-110 transition-transform">
@@ -292,14 +316,81 @@ const FairPriceApp = () => {
               //   </div>
 
               // ))}
+            
+              // </>
+              // <div className="col-span-full text-center py-12 text-gray-500">
+              //     Search for products to see results
               // </div>
-              <div className="col-span-full text-center py-12 text-gray-500">
-                  Search for products to see results
+              <div className="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-sm">
+                <div className="max-w-2xl mx-auto">
+                  <div className="w-20 h-20 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Search className="w-10 h-10 text-indigo-600" />
+                  </div>
+                  
+                  <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                    Discover the Best Deals
+                  </h2>
+                  
+                  <p className="text-gray-600 mb-6 leading-relaxed">
+                    Search for any product to compare prices across multiple online stores. 
+                    We'll help you find the lowest prices, track price history, and alert you when prices drop.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                    <div className="p-4 bg-blue-50 rounded-xl">
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                        <TrendingDown className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <h3 className="font-semibold text-gray-900 mb-2">Compare Prices</h3>
+                      <p className="text-sm text-gray-600">
+                        Instantly compare prices from Amazon, Flipkart, and more
+                      </p>
+                    </div>
+                    
+                    <div className="p-4 bg-green-50 rounded-xl">
+                      <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                        <Bell className="w-6 h-6 text-green-600" />
+                      </div>
+                      <h3 className="font-semibold text-gray-900 mb-2">Price Alerts</h3>
+                      <p className="text-sm text-gray-600">
+                        Get notified when products reach your target price
+                      </p>
+                    </div>
+                    
+                    <div className="p-4 bg-purple-50 rounded-xl">
+                      <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                        <BarChart2 className="w-6 h-6 text-purple-600" />
+                      </div>
+                      <h3 className="font-semibold text-gray-900 mb-2">Track History</h3>
+                      <p className="text-sm text-gray-600">
+                        View price trends and find the best time to buy
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-8 pt-8 border-t border-gray-200">
+                    <p className="text-sm text-gray-500 mb-3">Try searching for popular items:</p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {['iPhone 15', 'Samsung Galaxy', 'Sony Headphones', 'MacBook Air', 'iPad Pro'].map((keyword) => (
+                        <button
+                          key={keyword}
+                          onClick={() =>  handlingSearch(keyword)}
+                          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          {keyword}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
+                  
             )}
-            </div>
+</>
+          )}
+            </>
           </div>
         )}
+        
 
 {/*----- Product Details Tab ------------------*/}
 
@@ -344,11 +435,12 @@ const FairPriceApp = () => {
 
                   <div className="bg-gray-50 rounded-xl p-4 mb-6">
                     <h3 className="font-semibold text-gray-900 mb-3">Specifications</h3>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="grid grid-cols-2 gap-3  text-gray-1000 ">
+                      {productDetail.title}
+                      {/* <div className="h-4 bg-gray-200 rounded "> {productDetail.title}</div> */}
+                      {/* <div className="h-4 bg-gray-200 rounded"></div>
                       <div className="h-4 bg-gray-200 rounded"></div>
-                      <div className="h-4 bg-gray-200 rounded"></div>
-                      <div className="h-4 bg-gray-200 rounded"></div>
-                      <div className="h-4 bg-gray-200 rounded"></div>
+                      <div className="h-4 bg-gray-200 rounded"></div> */}
                     </div>
                   </div>
 
@@ -549,8 +641,8 @@ const FairPriceApp = () => {
                   <h3 className="text-lg font-semibold">Active Stores</h3>
                   <Store className="w-8 h-8 opacity-80" />
                 </div>
-                <p className="text-4xl font-bold">24</p>
-                <p className="text-blue-100 text-sm mt-2">3 pending integration</p>
+                <p className="text-4xl font-bold">3</p>
+                <p className="text-blue-100 text-sm mt-2">24 pending integration</p>
               </div>
 
               <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
@@ -558,7 +650,7 @@ const FairPriceApp = () => {
                   <h3 className="text-lg font-semibold">Products Tracked</h3>
                   <Package className="w-8 h-8 opacity-80" />
                 </div>
-                <p className="text-4xl font-bold">1,247</p>
+                <p className="text-4xl font-bold">{track}</p>
                 <p className="text-green-100 text-sm mt-2">+89 this week</p>
               </div>
 
@@ -579,9 +671,7 @@ const FairPriceApp = () => {
                 {[
                   { name: 'Amazon India', status: 'active', sync: '2 min ago' },
                   { name: 'Flipkart', status: 'active', sync: '3 min ago' },
-                  { name: 'Reliance Digital', status: 'active', sync: '5 min ago' },
-                  { name: 'Croma', status: 'active', sync: '4 min ago' },
-                  { name: 'Vijay Sales', status: 'pending', sync: '1 hour ago' }
+                  { name: 'ebay', status: 'active', sync: '5 min ago' },
                 ].map((store, idx) => (
                   <div key={idx} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
                     <div className="flex items-center gap-3">
@@ -602,7 +692,7 @@ const FairPriceApp = () => {
             </div>
 
             {/* Pipeline Monitoring */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            {/* <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Pipeline Monitoring</h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -627,10 +717,11 @@ const FairPriceApp = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         )}
       </div>
+      
         {showAlertModal && (
           
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
